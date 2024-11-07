@@ -73,9 +73,8 @@ Contributions, issues, and feature requests are welcome! Feel free to check the 
 
 ## 📧 Contact
 
-Your Name - [your.email@example.com](mailto:your.email@example.com)
 
-Project Link: [https://github.com/yourusername/toronto-crime-viz](#)
+Project Link: [https://github.com/nullishptr/toronto-crime-cts](#)
 
 ---
 
