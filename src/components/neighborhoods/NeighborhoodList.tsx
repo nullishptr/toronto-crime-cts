@@ -4,6 +4,14 @@ import NeighborhoodCard from './NeighborhoodCard';
 import {isControlSite, isCTSSite} from '../../utils/crimeDataUtils';
 import {CrimeData} from '../../types/crimeData';
 
+// Define violent crime types with colors - moved here to be shared
+export const VIOLENT_CRIMES = [
+    { type: 'ASSAULT', color: '#ef4444', label: 'Assault' },    
+    { type: 'BREAKENTER', color: '#3b82f6', label: 'Break & Enter' }, 
+    { type: 'ROBBERY', color: '#10b981', label: 'Robbery' },    
+    { type: 'SHOOTING', color: '#f59e0b', label: 'Shooting' }    
+];
+
 interface NeighborhoodListProps {
     features: CrimeData[];
 }
@@ -15,14 +23,12 @@ export default function NeighborhoodList({features}: NeighborhoodListProps) {
     const filteredFeatures = features.filter(feature => {
         const name = feature.NEIGHBOURHOOD_NAME;
         const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase());
-
         const matchesFilter =
             filter === 'all'
                 ? true
                 : filter === 'cts'
                     ? isCTSSite(name)
                     : isControlSite(name);
-
         return matchesSearch && matchesFilter;
     });
 
@@ -31,6 +37,7 @@ export default function NeighborhoodList({features}: NeighborhoodListProps) {
             <div className="bg-white rounded-lg shadow-lg p-6">
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">Neighbourhood Analysis</h2>
 
+                {/* Search and Filter Controls */}
                 <div className="flex flex-col sm:flex-row gap-4 mb-6">
                     <div className="relative flex-grow">
                         <input
@@ -74,6 +81,29 @@ export default function NeighborhoodList({features}: NeighborhoodListProps) {
                         >
                             Control Areas
                         </button>
+                    </div>
+                </div>
+
+                {/* Global Legend */}
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <p className="text-sm font-semibold text-gray-700 mb-2">Crime Types:</p>
+                    <div className="flex flex-wrap gap-4">
+                        {VIOLENT_CRIMES.map(({type, color, label}) => (
+                            <div key={type} className="flex items-center">
+                                <span 
+                                    className="w-4 h-0.5 mr-2" 
+                                    style={{backgroundColor: color}}
+                                />
+                                <span className="text-sm text-gray-600">{label}</span>
+                            </div>
+                        ))}
+                        <div className="flex items-center">
+                            <span 
+                                className="w-4 h-0.5 mr-2 bg-gray-500" 
+                                style={{borderTop: '1px dashed #6b7280'}}
+                            />
+                            <span className="text-sm text-gray-600">Total</span>
+                        </div>
                     </div>
                 </div>
 

@@ -1,8 +1,9 @@
 import React from 'react';
 import {MapPin, Shield, TrendingDown, TrendingUp} from 'lucide-react';
-import {Line, LineChart, ReferenceLine, ResponsiveContainer, XAxis, YAxis} from 'recharts';
+import {Line, LineChart, ReferenceLine, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend} from 'recharts';
 import {getCTSOpeningYear, isControlSite, isCTSSite} from '../../utils/crimeDataUtils';
 import {CrimeData} from '../../types/crimeData';
+import {VIOLENT_CRIMES} from './NeighborhoodList';
 
 interface NeighborhoodCardProps {
     feature: CrimeData;
@@ -17,15 +18,27 @@ export default function NeighborhoodCard({feature}: NeighborhoodCardProps) {
     // Generate yearly data from 2014 to 2023
     const yearlyData = Array.from({length: 10}, (_, i) => {
         const year = 2014 + i;
+        
+        // Create an object with individual crime counts
+        const crimeData: { [key: string]: number } = {};
+        let totalCount = 0;
+
+        VIOLENT_CRIMES.forEach(({type}) => {
+            const count = Number(feature[`${type}_${year}`] || 0);
+            crimeData[type.toLowerCase()] = count;
+            totalCount += count;
+        });
+
         return {
             year,
-            count: feature[`ASSAULT_${year}`] || 0,
+            ...crimeData,
+            total: totalCount,
         };
     });
 
     const latestYear = yearlyData[yearlyData.length - 1];
     const previousYear = yearlyData[yearlyData.length - 2];
-    const yearOverYearChange = ((latestYear.count - previousYear.count) / previousYear.count) * 100;
+    const yearOverYearChange = ((latestYear.total - previousYear.total) / previousYear.total) * 100;
 
     return (
         <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
@@ -58,7 +71,7 @@ export default function NeighborhoodCard({feature}: NeighborhoodCardProps) {
             <div className="flex items-center justify-between mb-4">
                 <div>
                     <p className="text-3xl font-bold text-gray-900">
-                        {latestYear.count}
+                        {latestYear.total}
                     </p>
                     <p className="text-sm text-gray-500">Total Incidents</p>
                 </div>
@@ -85,6 +98,12 @@ export default function NeighborhoodCard({feature}: NeighborhoodCardProps) {
                             interval={1}
                         />
                         <YAxis hide/>
+                        <Tooltip
+                            formatter={(value: number, name: string) => [
+                                `${value} incidents`,
+                                name === 'total' ? 'Total' : VIOLENT_CRIMES.find(c => c.type.toLowerCase() === name)?.label
+                            ]}
+                        />
                         {ctsOpeningYear && (
                             <ReferenceLine
                                 x={ctsOpeningYear}
@@ -99,11 +118,24 @@ export default function NeighborhoodCard({feature}: NeighborhoodCardProps) {
                                 }}
                             />
                         )}
+                        {/* Individual crime type lines */}
+                        {VIOLENT_CRIMES.map(({type, color}) => (
+                            <Line
+                                key={type}
+                                type="monotone"
+                                dataKey={type.toLowerCase()}
+                                stroke={color}
+                                strokeWidth={1.5}
+                                dot={false}
+                            />
+                        ))}
+                        {/* Total line */}
                         <Line
                             type="monotone"
-                            dataKey="count"
-                            stroke="#6495ED"
+                            dataKey="total"
+                            stroke="#6b7280"
                             strokeWidth={2}
+                            strokeDasharray="5 5"
                             dot={false}
                         />
                     </LineChart>
