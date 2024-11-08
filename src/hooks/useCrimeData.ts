@@ -1,5 +1,5 @@
-import {useEffect, useState} from 'react';
-import {CrimeData} from '../types/crimeData';
+import { useEffect, useState } from 'react';
+import { CrimeData } from '../types/crimeData';
 
 export const useCrimeData = () => {
     const [data, setData] = useState<CrimeData[]>([]);
@@ -7,7 +7,10 @@ export const useCrimeData = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('/neighbourhood_crime_rates.json')
+        const baseUrl = import.meta.env.BASE_URL;
+        const jsonUrl = `${baseUrl}neighbourhood_crime_rates.json`;
+
+        fetch(jsonUrl)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -25,5 +28,5 @@ export const useCrimeData = () => {
             });
     }, []);
 
-    return {data, error, loading};
+    return { data, error, loading };
 };
