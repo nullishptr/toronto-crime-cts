@@ -3,7 +3,6 @@ import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
 import { useControlAreas } from '../../context/ControlAreasContext';
 import { isCTSSite } from '../../utils/crimeDataUtils';
 import { Feature, Geometry } from 'geojson';
-import * as turf from '@turf/turf';
 import { getNeighborhoodCentroid, calculateDistance, assignDistanceZone, ZoneStats } from '../../utils/spatialUtils';
 import 'leaflet/dist/leaflet.css';
 import { 
@@ -26,6 +25,8 @@ interface CrimeComparison {
     nearCTS: number;
     otherAreas: number;
     percentDifference: number;
+    changeNearCTS: number;    // % change since 2016
+    changeOtherAreas: number; // % change since 2016
 }
 
 export default function SpatialAnalysis({ geoData }: SpatialAnalysisProps) {
@@ -169,9 +170,11 @@ export default function SpatialAnalysis({ geoData }: SpatialAnalysisProps) {
         const nearThreshold = 2; // Consider "near" as within 2km
 
         const comparisons: CrimeComparison[] = crimeTypes.map(crimeType => {
-            let nearSum = 0;
+            let near2023Sum = 0;
+            let near2016Sum = 0;
             let nearCount = 0;
-            let otherSum = 0;
+            let other2023Sum = 0;
+            let other2016Sum = 0;
             let otherCount = 0;
 
             geoData.forEach(neighborhood => {
@@ -191,28 +194,44 @@ export default function SpatialAnalysis({ geoData }: SpatialAnalysisProps) {
                     }
                 });
 
-                const crimeCount = neighborhood.properties?.[`${crimeType}_2023`] || 0;
+                const crime2023 = neighborhood.properties?.[`${crimeType}_2023`] || 0;
+                const crime2016 = neighborhood.properties?.[`${crimeType}_2016`] || 0;
                 
                 if (minDistance <= nearThreshold) {
-                    nearSum += crimeCount;
+                    near2023Sum += crime2023;
+                    near2016Sum += crime2016;
                     nearCount++;
                 } else {
-                    otherSum += crimeCount;
+                    other2023Sum += crime2023;
+                    other2016Sum += crime2016;
                     otherCount++;
                 }
             });
 
-            const nearAvg = nearCount > 0 ? nearSum / nearCount : 0;
-            const otherAvg = otherCount > 0 ? otherSum / otherCount : 0;
-            const percentDifference = otherAvg > 0 
-                ? ((nearAvg - otherAvg) / otherAvg) * 100 
+            const nearAvg2023 = nearCount > 0 ? near2023Sum / nearCount : 0;
+            const nearAvg2016 = nearCount > 0 ? near2016Sum / nearCount : 0;
+            const otherAvg2023 = otherCount > 0 ? other2023Sum / otherCount : 0;
+            const otherAvg2016 = otherCount > 0 ? other2016Sum / otherCount : 0;
+
+            const percentDifference = otherAvg2023 > 0 
+                ? ((nearAvg2023 - otherAvg2023) / otherAvg2023) * 100 
+                : 0;
+
+            const changeNearCTS = nearAvg2016 > 0
+                ? ((nearAvg2023 - nearAvg2016) / nearAvg2016) * 100
+                : 0;
+
+            const changeOtherAreas = otherAvg2016 > 0
+                ? ((otherAvg2023 - otherAvg2016) / otherAvg2016) * 100
                 : 0;
 
             return {
                 crimeType: crimeType.charAt(0) + crimeType.slice(1).toLowerCase(),
-                nearCTS: Math.round(nearAvg * 10) / 10,
-                otherAreas: Math.round(otherAvg * 10) / 10,
-                percentDifference: Math.round(percentDifference)
+                nearCTS: Math.round(nearAvg2023 * 10) / 10,
+                otherAreas: Math.round(otherAvg2023 * 10) / 10,
+                percentDifference: Math.round(percentDifference),
+                changeNearCTS: Math.round(changeNearCTS),
+                changeOtherAreas: Math.round(changeOtherAreas)
             };
         });
 
@@ -268,8 +287,14 @@ export default function SpatialAnalysis({ geoData }: SpatialAnalysisProps) {
 
             <div className="mt-8">
                 <h3 className="text-lg font-semibold mb-3">
-                    Crime Rate Comparison: Near CTS vs Other Areas
+                    Crime Rate Comparison & Trends (2016-2023)
                 </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                    Comparing crime rates between areas near CTS sites (within 2km) and other neighborhoods. 
+                    Changes are measured from 2016 (pre-CTS) to 2023. 
+                    <span className="text-red-500">Red</span> indicates an increase, 
+                    <span className="text-green-500">green</span> indicates a decrease.
+                </p>
                 <div className="grid grid-cols-1 gap-6">
                     <div className="h-[400px]">
                         <ResponsiveContainer width="100%" height="100%">
@@ -300,7 +325,7 @@ export default function SpatialAnalysis({ geoData }: SpatialAnalysisProps) {
                         </ResponsiveContainer>
                     </div>
                     
-                    {/* Percentage difference table */}
+                    {/* Reorganized comparison table */}
                     <div className="overflow-x-auto">
                         <table className="min-w-full bg-white border border-gray-200">
                             <thead>
@@ -308,37 +333,73 @@ export default function SpatialAnalysis({ geoData }: SpatialAnalysisProps) {
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Crime Type
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Near CTS (≤2km)
+                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200" colSpan={2}>
+                                        Near CTS Sites (≤2km)
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200" colSpan={2}>
                                         Other Areas
                                     </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200">
+                                        Comparison
+                                    </th>
+                                </tr>
+                                <tr className="bg-gray-50">
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Difference
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-l border-gray-200">
+                                        2023 Avg
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                                        Change from 2016
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-l border-gray-200">
+                                        2023 Avg
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                                        Change from 2016
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-l border-gray-200">
+                                        Current Difference
                                     </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
                                 {crimeComparison.map((item) => (
-                                    <tr key={item.crimeType}>
+                                    <tr key={item.crimeType} className="hover:bg-gray-50">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                             {item.crimeType}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-l border-gray-200">
                                             {item.nearCTS.toFixed(1)}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${
+                                            item.changeNearCTS > 0 ? 'text-red-500' : 'text-green-500'
+                                        }`}>
+                                            {item.changeNearCTS > 0 ? '+' : ''}{item.changeNearCTS}%
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-l border-gray-200">
                                             {item.otherAreas.toFixed(1)}
                                         </td>
                                         <td className={`px-6 py-4 whitespace-nowrap text-sm ${
-                                            item.percentDifference > 0 ? 'text-red-500' : 'text-green-500'
+                                            item.changeOtherAreas > 0 ? 'text-red-500' : 'text-green-500'
                                         }`}>
+                                            {item.changeOtherAreas > 0 ? '+' : ''}{item.changeOtherAreas}%
+                                        </td>
+                                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${
+                                            item.percentDifference > 0 ? 'text-red-500' : 'text-green-500'
+                                        } border-l border-gray-200`}>
                                             {item.percentDifference > 0 ? '+' : ''}{item.percentDifference}%
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
+                            <tfoot className="bg-gray-50">
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-3 text-xs text-gray-500">
+                                        * Current Difference shows how much higher/lower crime rates are in near-CTS areas compared to other areas in 2023
+                                    </td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
