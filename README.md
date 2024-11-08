@@ -1,81 +1,99 @@
-# Toronto Crime Data Visualization (2014-2023)
+# Toronto Crime Analysis Dashboard
 
-This project visualizes crime statistics across Toronto neighborhoods from 2014 to 2023, with special attention to neighborhoods containing Consumption and Treatment Sites (CTS). The visualization includes trend lines for different types of crimes and indicates when CTS sites opened in specific neighborhoods.
+An interactive visualization dashboard analyzing crime patterns in Toronto's Community Treatment Sites (CTS) and control neighborhoods. This project examines the impact of CTS implementation on local crime rates through various statistical approaches including difference-in-differences analysis, trend analysis, and indexed comparisons.
 
-## 🔗 [Live Demo](#) <!-- Add your GitHub Pages URL here once deployed -->
+## 📊 Features
 
-![Screenshot](crime_charts/placeholder.png) <!-- Consider adding a screenshot of your visualization -->
+- **Difference-in-Differences Analysis**: Compares violent crime trends between CTS and control areas before and after implementation
+- **Trend Analysis**: Visualizes deviations from expected crime trends using detrended data
+- **Indexed Comparisons**: Shows relative changes in crime rates normalized to the 2016 baseline
+- **Interactive Visualizations**: Built with Recharts for smooth, responsive data exploration
+- **Focus on Violent Crime**: Analyzes key crime categories including:
+  - Assault
+  - Break and Enter
+  - Robbery
+  - Shootings
 
-## 🎯 Features
+## 🚀 Live Demo
 
-- Interactive crime trend visualizations for all Toronto neighborhoods
-- Special highlighting of neighborhoods with CTS sites
-- Timeline markers showing CTS site opening dates
-- Mobile-responsive design
-- Search functionality
-- Click-to-expand detailed views
+Visit the dashboard at: [https://nullishptr.github.io/toronto-crime-cts](https://nullishptr.github.io/toronto-crime-cts)
 
-## 🏃‍♂️ Quick Start
+## 🛠️ Technology Stack
+
+- React + TypeScript
+- Vite for build tooling
+- Recharts for data visualization
+- Tailwind CSS for styling
+- shadcn/ui for UI components
+
+## 📦 Installation
 
 ```bash
 # Clone the repository
-git clone <your-repository-url>
-cd toronto-crime-viz
+git clone https://github.com/nullishptr/toronto-crime-cts.git
 
-# Set up Python virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows use: venv\Scripts\activate
+# Navigate to project directory
+cd project-name
 
 # Install dependencies
-pip install pandas plotly
+npm install
 
-# Run the visualization generator
-python crime_analysis.py
+# Start development server
+npm run dev
 ```
 
-The script will generate a `crime_charts` directory containing:
-- Individual interactive charts for each neighborhood
-- A main `gallery.html` file that displays all visualizations
+## 📈 Data Sources
 
-## 📊 Data Sources
+This dashboard analyzes Toronto neighborhood crime data from 2014-2023, focusing on:
+- 6 CTS implementation sites (implemented in 2017)
+- 6 control neighborhoods for comparison
+- Various violent crime categories
 
-- Crime data: Toronto Police Service's Open Data Portal
-- CTS site information:
-  - The Works (Toronto Public Health) - 2017
-  - South Riverdale Community Health Centre - 2017
-  - Parkdale Queen West Community Health Centre - 2017
-  - Regent Park Community Health Centre - 2017
-  - Fred Victor Centre - 2017
-  - Street Health - 2017
-  - Moss Park CTS - 2017
-  - Casey House - 2022
-  - Kensington Market OPS - 2022
+## 📋 Project Structure
 
-## 🛠️ Technical Stack
+```
+src/
+├── components/         # React components
+├── hooks/             # Custom hooks including data fetching
+├── types/             # TypeScript type definitions
+├── utils/             # Utility functions and data processing
+└── pages/             # Page components
+```
 
-- Python 3.9+
-- Pandas for data processing
-- Plotly for interactive visualizations
-- HTML/CSS for gallery interface
+## 📊 Analysis Methods
 
-## 📝 License
+### Difference-in-Differences
+Examines the causal impact of CTS implementation by comparing changes in crime rates between treatment and control areas before and after 2017.
 
-[MIT License](LICENSE)
+### Trend Analysis
+Uses linear regression to detrend crime data, showing deviations from expected patterns for both CTS and control neighborhoods.
+
+### Indexed Analysis
+Normalizes crime rates to 2016 baseline (index=100) to show relative changes over time.
 
 ## 🤝 Contributing
 
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](#).
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👥 Authors
+
+- [@nullishptr](https://github.com/nullishptr)
 
 ## 🙏 Acknowledgments
 
-- Toronto Police Service for the open data
-- Toronto Public Health for CTS site information
+- Toronto Public Health for CTS implementation data
+- Toronto Police Service for crime statistics
 
-## 📧 Contact
+## 📬 Contact
 
-
-Project Link: [https://github.com/nullishptr/toronto-crime-cts](#)
-
----
-
-Made with ❤️ in Toronto
+For questions or feedback, please open an issue on GitHub
