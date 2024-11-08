@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
-import { CrimeData } from '../types/crimeData';
+import { Feature } from 'geojson';
 
 export const useCrimeData = () => {
-    const [data, setData] = useState<CrimeData[]>([]);
+    const [data, setData] = useState<Feature[]>([]);
     const [error, setError] = useState<Error | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const baseUrl = import.meta.env.BASE_URL;
-        const jsonUrl = `${baseUrl}neighbourhood_crime_rates.json`;
+        const jsonUrl = `${baseUrl}Geo_Neighbourhood_Crime_Rates_Open_Data.geojson`;
 
         fetch(jsonUrl)
             .then(response => {
@@ -17,12 +17,12 @@ export const useCrimeData = () => {
                 }
                 return response.json();
             })
-            .then((jsonData: CrimeData[]) => {
-                setData(jsonData);
+            .then((geoJson) => {
+                setData(geoJson.features);
                 setLoading(false);
             })
             .catch(err => {
-                console.error('Error loading JSON:', err);
+                console.error('Error loading GeoJSON:', err);
                 setError(err);
                 setLoading(false);
             });

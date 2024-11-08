@@ -1,19 +1,21 @@
 import React from 'react';
 import {MapPin, Shield, TrendingDown, TrendingUp} from 'lucide-react';
 import {Line, LineChart, ReferenceLine, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend} from 'recharts';
-import {getCTSOpeningYear, isControlSite, isCTSSite} from '../../utils/crimeDataUtils';
-import {CrimeData} from '../../types/crimeData';
+import {getCTSOpeningYear, isCTSSite, getCrimeCount} from '../../utils/crimeDataUtils';
+import {CrimeFeature} from '../../types/crimeData';
 import {VIOLENT_CRIMES} from './NeighborhoodList';
+import { useControlAreas } from '../../context/ControlAreasContext';
 
 interface NeighborhoodCardProps {
-    feature: CrimeData;
+    feature: CrimeFeature;
 }
 
 export default function NeighborhoodCard({feature}: NeighborhoodCardProps) {
-    const neighborhoodName = feature.NEIGHBOURHOOD_NAME;
+    const neighborhoodName = feature.properties.AREA_NAME;
     const ctsOpeningYear = getCTSOpeningYear(neighborhoodName);
     const isCTS = isCTSSite(neighborhoodName);
-    const isControl = isControlSite(neighborhoodName);
+    const { selectedControls } = useControlAreas();
+    const isControl = selectedControls[neighborhoodName] || false;
 
     // Generate yearly data from 2014 to 2023
     const yearlyData = Array.from({length: 10}, (_, i) => {
@@ -24,7 +26,7 @@ export default function NeighborhoodCard({feature}: NeighborhoodCardProps) {
         let totalCount = 0;
 
         VIOLENT_CRIMES.forEach(({type}) => {
-            const count = Number(feature[`${type}_${year}`] || 0);
+            const count = getCrimeCount(feature, type, year);
             crimeData[type.toLowerCase()] = count;
             totalCount += count;
         });
@@ -49,16 +51,16 @@ export default function NeighborhoodCard({feature}: NeighborhoodCardProps) {
                         {isCTS && (
                             <span
                                 className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                <Shield className="w-4 h-4 mr-1 text-red-800"/>
-                CTS
-              </span>
+                                <Shield className="w-4 h-4 mr-1 text-red-800"/>
+                                CTS
+                            </span>
                         )}
                         {isControl && (
                             <span
                                 className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                <Shield className="w-4 h-4 mr-1 text-blue-800"/>
-                Control
-              </span>
+                                <Shield className="w-4 h-4 mr-1 text-blue-800"/>
+                                Control
+                            </span>
                         )}
                     </h3>
                     <div className="flex items-center mt-1">

@@ -1,13 +1,9 @@
-export interface CrimeData {
+import { Feature, Geometry } from 'geojson';
+
+export interface CrimeProperties {
     OBJECTID_1: number;
-    NEIGHBOURHOOD_NAME: string;
-    HOOD_158: number;
-
-    [key: string]: number | string;
-}
-
-export interface NeighborhoodProperties {
     AREA_NAME: string;
+    HOOD_158: number;
     ASSAULT_2014: number;
     ASSAULT_2015: number;
     ASSAULT_2016: number;
@@ -18,14 +14,40 @@ export interface NeighborhoodProperties {
     ASSAULT_2021: number;
     ASSAULT_2022: number;
     ASSAULT_2023: number;
-    AUTOTHEFT_2023: number;
-    BIKETHEFT_2023: number;
+    BREAKENTER_2014: number;
+    BREAKENTER_2015: number;
+    BREAKENTER_2016: number;
+    BREAKENTER_2017: number;
+    BREAKENTER_2018: number;
+    BREAKENTER_2019: number;
+    BREAKENTER_2020: number;
+    BREAKENTER_2021: number;
+    BREAKENTER_2022: number;
     BREAKENTER_2023: number;
+    ROBBERY_2014: number;
+    ROBBERY_2015: number;
+    ROBBERY_2016: number;
+    ROBBERY_2017: number;
+    ROBBERY_2018: number;
+    ROBBERY_2019: number;
+    ROBBERY_2020: number;
+    ROBBERY_2021: number;
+    ROBBERY_2022: number;
     ROBBERY_2023: number;
+    SHOOTING_2014: number;
+    SHOOTING_2015: number;
+    SHOOTING_2016: number;
+    SHOOTING_2017: number;
+    SHOOTING_2018: number;
+    SHOOTING_2019: number;
+    SHOOTING_2020: number;
+    SHOOTING_2021: number;
+    SHOOTING_2022: number;
     SHOOTING_2023: number;
-    THEFTFROMMV_2023: number;
-    THEFTOVER_2023: number;
+    [key: string]: number | string; // For dynamic access
 }
+
+export type CrimeFeature = Feature<Geometry, CrimeProperties>;
 
 export interface CTSSite {
     neighborhood: string;
@@ -41,18 +63,15 @@ export const CTS_SITES: CTSSite[] = [
     {neighborhood: 'West Queen West', openingYear: 2017},
 ];
 
-export interface SeasonalPattern {
-    month: string;
-    ctsPrePattern: number;
-    ctsPostPattern: number;
-    controlPrePattern: number;
-    controlPostPattern: number;
-    ctsPatternChange: number;
-    controlPatternChange: number;
+export interface ControlSite {
+    neighborhood: string;
 }
 
-export interface MonthlyPattern {
-    month: string;
-    crimeCount: number;
-    yearCount: number;
-}
+export const CONTROL_SITES: ControlSite[] = [
+    {neighborhood: 'South Eglinton-Davisville'},
+    {neighborhood: 'North Toronto'},
+    {neighborhood: 'Dovercourt Village'},
+    {neighborhood: 'Yonge-Bay Corridor'},
+    {neighborhood: 'Black Creek'},
+    {neighborhood: 'Pelmo Park-Humberlea'},
+];

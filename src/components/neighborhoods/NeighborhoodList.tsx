@@ -2,7 +2,8 @@ import React, {useState} from 'react';
 import {Search} from 'lucide-react';
 import NeighborhoodCard from './NeighborhoodCard';
 import {isControlSite, isCTSSite} from '../../utils/crimeDataUtils';
-import {CrimeData} from '../../types/crimeData';
+import {CrimeFeature} from '../../types/crimeData';
+import { useControlAreas } from '../../context/ControlAreasContext';
 
 // Define violent crime types with colors - moved here to be shared
 export const VIOLENT_CRIMES = [
@@ -13,24 +14,27 @@ export const VIOLENT_CRIMES = [
 ];
 
 interface NeighborhoodListProps {
-    features: CrimeData[];
+    features: CrimeFeature[];
 }
 
 export default function NeighborhoodList({features}: NeighborhoodListProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [filter, setFilter] = useState<'all' | 'cts' | 'control'>('all');
+    const { selectedControls } = useControlAreas();
 
     const filteredFeatures = features.filter(feature => {
-        const name = feature.NEIGHBOURHOOD_NAME;
+        const name = feature.properties.AREA_NAME;
         const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesFilter =
             filter === 'all'
                 ? true
                 : filter === 'cts'
                     ? isCTSSite(name)
-                    : isControlSite(name);
+                    : selectedControls[name] || false;
         return matchesSearch && matchesFilter;
     });
+
+    const selectedControlCount = Object.values(selectedControls).filter(Boolean).length;
 
     return (
         <div className="space-y-6">
@@ -79,7 +83,7 @@ export default function NeighborhoodList({features}: NeighborhoodListProps) {
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                         >
-                            Control Areas
+                            Control Areas ({selectedControlCount})
                         </button>
                     </div>
                 </div>
@@ -110,7 +114,7 @@ export default function NeighborhoodList({features}: NeighborhoodListProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredFeatures.map((feature) => (
                         <NeighborhoodCard
-                            key={feature.NEIGHBOURHOOD_NAME}
+                            key={feature.properties.AREA_NAME}
                             feature={feature}
                         />
                     ))}

@@ -11,8 +11,9 @@ import {
 } from 'recharts';
 import {useCrimeData} from '../../hooks/useCrimeData';
 import {useEffect, useState} from 'react';
-import {CRIME_TYPES, isControlSite, isCTSSite} from '../../utils/crimeDataUtils';
-import {CrimeData} from '../../types/crimeData';
+import {CRIME_TYPES, getCrimeCount} from '../../utils/crimeDataUtils';
+import {CrimeFeature} from '../../types/crimeData';
+import { useControlAreas } from '../../context/ControlAreasContext';
 
 // Filter for violent crime types
 const VIOLENT_CRIMES = CRIME_TYPES.filter(type =>
@@ -26,8 +27,8 @@ interface IndexedData {
 }
 
 const calculateIndexedTrends = (
-    ctsFeatures: any[],
-    controlFeatures: any[],
+    ctsFeatures: CrimeFeature[],
+    controlFeatures: CrimeFeature[],
     baselineYear: number = 2016 // Year before intervention
 ): IndexedData[] => {
     const years = [2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023];
@@ -35,13 +36,13 @@ const calculateIndexedTrends = (
     // Calculate baseline values (2016)
     const ctsBaseline = ctsFeatures.reduce((total, feature) => {
         return total + VIOLENT_CRIMES.reduce((sum, type) => {
-            return sum + (feature[`${type}_${baselineYear}`] || 0);
+            return sum + getCrimeCount(feature, type, baselineYear);
         }, 0);
     }, 0);
 
     const controlBaseline = controlFeatures.reduce((total, feature) => {
         return total + VIOLENT_CRIMES.reduce((sum, type) => {
-            return sum + (feature[`${type}_${baselineYear}`] || 0);
+            return sum + getCrimeCount(feature, type, baselineYear);
         }, 0);
     }, 0);
 
@@ -49,13 +50,13 @@ const calculateIndexedTrends = (
     return years.map(year => {
         const ctsCrimes = ctsFeatures.reduce((total, feature) => {
             return total + VIOLENT_CRIMES.reduce((sum, type) => {
-                return sum + (feature[`${type}_${year}`] || 0);
+                return sum + getCrimeCount(feature, type, year);
             }, 0);
         }, 0);
 
         const controlCrimes = controlFeatures.reduce((total, feature) => {
             return total + VIOLENT_CRIMES.reduce((sum, type) => {
-                return sum + (feature[`${type}_${year}`] || 0);
+                return sum + getCrimeCount(feature, type, year);
             }, 0);
         }, 0);
 
@@ -70,16 +71,27 @@ const calculateIndexedTrends = (
 export default function IndexedTrendAnalysis() {
     const {data, loading, error} = useCrimeData();
     const [indexedData, setIndexedData] = useState<IndexedData[]>([]);
+    const { selectedControls } = useControlAreas();
 
     useEffect(() => {
         if (loading || error || !data.length) return;
 
-        const ctsFeatures = data.filter((item: CrimeData) => isCTSSite(item.NEIGHBOURHOOD_NAME));
-        const controlFeatures = data.filter((item: CrimeData) => isControlSite(item.NEIGHBOURHOOD_NAME));
+        const ctsFeatures = data.filter((feature: CrimeFeature) => 
+            feature.properties.AREA_NAME === 'Downtown Yonge East' ||
+            feature.properties.AREA_NAME === 'South Riverdale' ||
+            feature.properties.AREA_NAME === 'South Parkdale' ||
+            feature.properties.AREA_NAME === 'Regent Park' ||
+            feature.properties.AREA_NAME === 'Moss Park' ||
+            feature.properties.AREA_NAME === 'West Queen West'
+        );
+        
+        const controlFeatures = data.filter((feature: CrimeFeature) => 
+            selectedControls[feature.properties.AREA_NAME] || false
+        );
 
         const trends = calculateIndexedTrends(ctsFeatures, controlFeatures);
         setIndexedData(trends);
-    }, [data, loading, error]);
+    }, [data, loading, error, selectedControls]);
 
     if (loading) return <div>Loading data...</div>;
     if (error) return <div>Error loading data: {error.message}</div>;
@@ -141,8 +153,7 @@ export default function IndexedTrendAnalysis() {
                             name="CTS Areas"
                             stroke="#DC143C"
                             strokeWidth={2}
-                            dot={{r: 4}}
-                            activeDot={{r: 6}}
+                            dot={true}
                         />
                         <Line
                             type="monotone"
@@ -150,8 +161,7 @@ export default function IndexedTrendAnalysis() {
                             name="Control Areas"
                             stroke="#6495ED"
                             strokeWidth={2}
-                            dot={{r: 4}}
-                            activeDot={{r: 6}}
+                            dot={true}
                         />
                     </LineChart>
                 </ResponsiveContainer>
@@ -165,6 +175,10 @@ export default function IndexedTrendAnalysis() {
                     <li>Values above 100 indicate increases relative to 2016</li>
                     <li>Values below 100 indicate decreases relative to 2016</li>
                     <li>CTS implementation began in 2017</li>
+                    <li>Selected control areas: {Object.entries(selectedControls)
+                        .filter(([_, selected]) => selected)
+                        .map(([name]) => name)
+                        .join(', ')}</li>
                 </ul>
             </div>
         </div>

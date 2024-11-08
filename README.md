@@ -1,10 +1,10 @@
 # Toronto Crime Analysis Dashboard
 
-An interactive visualization dashboard analyzing crime patterns in Toronto's Community Treatment Sites (CTS) and control neighborhoods. This project examines the impact of CTS implementation on local crime rates through various statistical approaches including difference-in-differences analysis, trend analysis, and indexed comparisons.
+An interactive visualization dashboard analyzing crime patterns in Toronto's Supervised Consumption Sites (SCS) and control neighborhoods. This project examines the impact of SCS implementation on local crime rates through various statistical approaches including difference-in-differences analysis, trend analysis, and indexed comparisons.
 
 ## 📊 Features
 
-- **Difference-in-Differences Analysis**: Compares violent crime trends between CTS and control areas before and after implementation
+- **Difference-in-Differences Analysis**: Compares violent crime trends between SCS and control areas before and after implementation
 - **Trend Analysis**: Visualizes deviations from expected crime trends using detrended data
 - **Indexed Comparisons**: Shows relative changes in crime rates normalized to the 2016 baseline
 - **Interactive Visualizations**: Built with Recharts for smooth, responsive data exploration
@@ -45,7 +45,7 @@ npm run dev
 ## 📈 Data Sources
 
 This dashboard analyzes Toronto neighborhood crime data from 2014-2023, focusing on:
-- 6 CTS implementation sites (implemented in 2017)
+- 6 SCS implementation sites (implemented in 2017)
 - 6 control neighborhoods for comparison
 - Various violent crime categories
 
@@ -63,10 +63,10 @@ src/
 ## 📊 Analysis Methods
 
 ### Difference-in-Differences
-Examines the causal impact of CTS implementation by comparing changes in crime rates between treatment and control areas before and after 2017.
+Examines the causal impact of SCS implementation by comparing changes in crime rates between treatment and control areas before and after 2017.
 
 ### Trend Analysis
-Uses linear regression to detrend crime data, showing deviations from expected patterns for both CTS and control neighborhoods.
+Uses linear regression to detrend crime data, showing deviations from expected patterns for both SCS and control neighborhoods.
 
 ### Indexed Analysis
 Normalizes crime rates to 2016 baseline (index=100) to show relative changes over time.
@@ -91,7 +91,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- Toronto Public Health for CTS implementation data
+- Toronto Public Health for SCS implementation data
 - Toronto Police Service for crime statistics
 
 ## 📬 Contact

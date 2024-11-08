@@ -11,8 +11,9 @@ import {
 } from 'recharts';
 import {useCrimeData} from '../../hooks/useCrimeData';
 import {useEffect, useState} from 'react';
-import {CRIME_TYPES, CTS_SITES, isControlSite} from '../../utils/crimeDataUtils';
-import {CrimeData} from '../../types/crimeData';
+import {CRIME_TYPES, CTS_SITES, getCrimeCount} from '../../utils/crimeDataUtils';
+import {CrimeFeature} from '../../types/crimeData';
+import { useControlAreas } from '../../context/ControlAreasContext';
 
 interface YearlyDataPoint {
     year: number;
@@ -30,6 +31,7 @@ const VIOLENT_CRIMES = CRIME_TYPES.filter(type =>
 export default function DifferenceInDifferences() {
     const {data, loading, error} = useCrimeData();
     const [yearlyData, setYearlyData] = useState<YearlyDataPoint[]>([]);
+    const { selectedControls } = useControlAreas();
 
     useEffect(() => {
         if (loading || error || !data.length) return;
@@ -39,18 +41,20 @@ export default function DifferenceInDifferences() {
             .filter(site => site.openingYear === 2017)
             .map(site => site.neighborhood);
 
-        const ctsFeatures = data.filter((item: CrimeData) =>
-            cts2017Sites.includes(item.NEIGHBOURHOOD_NAME)
+        const ctsFeatures = data.filter((feature: CrimeFeature) =>
+            cts2017Sites.includes(feature.properties.AREA_NAME)
         );
-        const controlFeatures = data.filter((item: CrimeData) => isControlSite(item.NEIGHBOURHOOD_NAME));
+        const controlFeatures = data.filter((feature: CrimeFeature) => 
+            selectedControls[feature.properties.AREA_NAME] || false
+        );
 
         // Calculate baseline averages (2014-2016)
         const baselineYears = [2014, 2015, 2016];
-        const calculateBaseline = (features: CrimeData[]) => {
-            return features.reduce((acc, item) => {
+        const calculateBaseline = (features: CrimeFeature[]) => {
+            return features.reduce((acc, feature) => {
                 const baselineTotal = baselineYears.reduce((sum, year) => {
                     return sum + VIOLENT_CRIMES.reduce((crimeSum, crimeType) => {
-                        return crimeSum + (item[`${crimeType}_${year}`] || 0);
+                        return crimeSum + getCrimeCount(feature, crimeType, year);
                     }, 0);
                 }, 0);
                 return acc + (baselineTotal / baselineYears.length);
@@ -65,15 +69,15 @@ export default function DifferenceInDifferences() {
             const year = 2014 + i;
 
             // Calculate yearly averages
-            const ctsAverage = ctsFeatures.reduce((acc, item) => {
+            const ctsAverage = ctsFeatures.reduce((acc, feature) => {
                 return acc + VIOLENT_CRIMES.reduce((crimeSum, crimeType) => {
-                    return crimeSum + (item[`${crimeType}_${year}`] || 0);
+                    return crimeSum + getCrimeCount(feature, crimeType, year);
                 }, 0);
             }, 0) / ctsFeatures.length;
 
-            const controlAverage = controlFeatures.reduce((acc, item) => {
+            const controlAverage = controlFeatures.reduce((acc, feature) => {
                 return acc + VIOLENT_CRIMES.reduce((crimeSum, crimeType) => {
-                    return crimeSum + (item[`${crimeType}_${year}`] || 0);
+                    return crimeSum + getCrimeCount(feature, crimeType, year);
                 }, 0);
             }, 0) / controlFeatures.length;
 
@@ -106,7 +110,7 @@ export default function DifferenceInDifferences() {
         });
 
         setYearlyData(finalYearlyStats);
-    }, [data, loading, error]);
+    }, [data, loading, error, selectedControls]);
 
     if (loading) return <div>Loading data...</div>;
     if (error) return <div>Error loading data: {error.message}</div>;
@@ -199,6 +203,10 @@ export default function DifferenceInDifferences() {
                     <li>Includes violent crimes: {VIOLENT_CRIMES.join(', ').toLowerCase()}</li>
                     <li>Relative Difference shows the treatment effect after accounting for pre-existing trends</li>
                     <li>Negative values indicate better outcomes in CTS areas relative to control areas</li>
+                    <li>Selected control areas: {Object.entries(selectedControls)
+                        .filter(([_, selected]) => selected)
+                        .map(([name]) => name)
+                        .join(', ')}</li>
                 </ul>
             </div>
         </div>

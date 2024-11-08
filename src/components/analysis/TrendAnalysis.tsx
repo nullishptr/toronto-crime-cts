@@ -11,8 +11,9 @@ import {
 } from 'recharts';
 import {useCrimeData} from '../../hooks/useCrimeData';
 import {useEffect, useState} from 'react';
-import {CRIME_TYPES, isControlSite, isCTSSite} from '../../utils/crimeDataUtils';
-import {CrimeData} from '../../types/crimeData';
+import {CRIME_TYPES, isCTSSite, getCrimeCount} from '../../utils/crimeDataUtils';
+import {CrimeFeature} from '../../types/crimeData';
+import { useControlAreas } from '../../context/ControlAreasContext';
 
 // Filter for violent crime types
 const VIOLENT_CRIMES = CRIME_TYPES.filter(type =>
@@ -47,8 +48,8 @@ const linearRegression = (years: number[], values: number[]) => {
 };
 
 const calculateTrendAnalysis = (
-    ctsFeatures: any[],
-    controlFeatures: any[]
+    ctsFeatures: CrimeFeature[],
+    controlFeatures: CrimeFeature[]
 ): TrendData[] => {
     const years = [2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023];
 
@@ -56,7 +57,7 @@ const calculateTrendAnalysis = (
     const ctsTotals = years.map(year =>
         ctsFeatures.reduce((total, feature) =>
                 total + VIOLENT_CRIMES.reduce((sum, type) =>
-                    sum + (feature[`${type}_${year}`] || 0), 0
+                    sum + getCrimeCount(feature, type, year), 0
                 ), 0
         )
     );
@@ -64,7 +65,7 @@ const calculateTrendAnalysis = (
     const controlTotals = years.map(year =>
         controlFeatures.reduce((total, feature) =>
                 total + VIOLENT_CRIMES.reduce((sum, type) =>
-                    sum + (feature[`${type}_${year}`] || 0), 0
+                    sum + getCrimeCount(feature, type, year), 0
                 ), 0
         )
     );
@@ -82,18 +83,23 @@ const calculateTrendAnalysis = (
 };
 
 export default function TrendAnalysis() {
-    const {data, loading, error} = useCrimeData();
+    const { data, loading, error } = useCrimeData();
     const [trendData, setTrendData] = useState<TrendData[]>([]);
+    const { selectedControls } = useControlAreas();
 
     useEffect(() => {
         if (loading || error || !data.length) return;
 
-        const ctsFeatures = data.filter((item: CrimeData) => isCTSSite(item.NEIGHBOURHOOD_NAME));
-        const controlFeatures = data.filter((item: CrimeData) => isControlSite(item.NEIGHBOURHOOD_NAME));
+        const ctsFeatures = data.filter((feature: CrimeFeature) => 
+            isCTSSite(feature.properties.AREA_NAME)
+        );
+        const controlFeatures = data.filter((feature: CrimeFeature) => 
+            selectedControls[feature.properties.AREA_NAME] || false
+        );
 
         const trends = calculateTrendAnalysis(ctsFeatures, controlFeatures);
         setTrendData(trends);
-    }, [data, loading, error]);
+    }, [data, loading, error, selectedControls]);
 
     if (loading) return <div>Loading data...</div>;
     if (error) return <div>Error loading data: {error.message}</div>;
@@ -107,6 +113,8 @@ export default function TrendAnalysis() {
             <p className="text-sm text-gray-600 mb-4">
                 Differences from expected linear trend for CTS and control areas
             </p>
+
+
 
             <div className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -177,6 +185,10 @@ export default function TrendAnalysis() {
                     <li>Positive values indicate higher than expected crime levels</li>
                     <li>Negative values indicate lower than expected crime levels</li>
                     <li>CTS implementation began in 2017</li>
+                    <li>Selected control areas: {Object.entries(selectedControls)
+                        .filter(([_, selected]) => selected)
+                        .map(([name]) => name)
+                        .join(', ')}</li>
                 </ul>
             </div>
         </div>
